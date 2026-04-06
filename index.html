@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>公益北京地区本人征婚交友平台</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',Arial,sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;padding:12px}
+.container{max-width:1200px;margin:0 auto}
+.header{text-align:center;color:#fff;padding:15px 0 20px}
+.header h1{font-size:1.6rem;margin-bottom:6px;text-shadow:1px 1px 3px rgba(0,0,0,.2)}
+.header p{opacity:.9;font-size:.88rem}
+.stats-bar{display:flex;justify-content:center;gap:12px;margin-top:10px;flex-wrap:wrap}
+.stat-item{background:rgba(255,255,255,.2);padding:5px 14px;border-radius:15px;font-size:.85rem;color:#fff}
+.tabs{display:flex;gap:8px;margin-bottom:15px;flex-wrap:wrap}
+.tab-btn{padding:10px 18px;border:none;background:rgba(255,255,255,.2);color:#fff;border-radius:20px;cursor:pointer;font-size:.9rem;transition:all .3s;-webkit-tap-highlight-color:transparent}
+.tab-btn:hover,.tab-btn.active{background:#fff;color:#667eea}
+.card{background:#fff;border-radius:14px;padding:18px;margin-bottom:15px;box-shadow:0 8px 30px rgba(0,0,0,.1)}
+.card-title{font-size:1.1rem;color:#333;margin-bottom:15px;padding-bottom:8px;border-bottom:2px solid #f0f0f0;display:flex;justify-content:space-between;align-items:center}
+.filter-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.form-group{display:flex;flex-direction:column}
+.form-group label{font-size:.8rem;color:#666;margin-bottom:4px;font-weight:500}
+.form-group select,.form-group input,.form-group textarea{padding:9px 10px;border:1px solid #ddd;border-radius:8px;font-size:.9rem;-webkit-appearance:none;appearance:none;background:#fff}
+.form-group select:focus,.form-group input:focus,.form-group textarea:focus{outline:none;border-color:#667eea}
+.btn{padding:10px 20px;border:none;border-radius:8px;cursor:pointer;font-size:.9rem;transition:all .3s;-webkit-tap-highlight-color:transparent}
+.btn-primary{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff}
+.btn-primary:active{transform:scale(.97)}
+.btn-secondary{background:#f5f5f5;color:#333}
+.btn-danger{background:#ff4757;color:#fff}
+.btn-small{padding:6px 12px;font-size:.82rem}
+.profiles-grid{display:grid;grid-template-columns:1fr;gap:15px}
+@media(min-width:600px){.profiles-grid{grid-template-columns:repeat(auto-fill,minmax(340px,1fr))}}
+.profile-card{background:#f8f9fa;border-radius:12px;padding:16px;transition:transform .2s;border-left:4px solid #667eea}
+.profile-card.female{border-left-color:#e91e8c}
+.profile-card:active{transform:scale(.99)}
+.profile-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
+.profile-num{font-size:1.1rem;font-weight:bold;color:#333}
+.profile-code{font-size:.72rem;color:#999;margin-top:2px}
+.profile-gender{padding:3px 10px;border-radius:10px;font-size:.82rem;font-weight:500}
+.gender-male{background:#e3f2fd;color:#1976d2}
+.gender-female{background:#fce4ec;color:#c2185b}
+.profile-info{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:10px}
+.info-item{font-size:.83rem}
+.info-label{color:#999}
+.info-value{color:#333;font-weight:500}
+.profile-detail{font-size:.83rem;color:#555;line-height:1.6;margin-bottom:8px;padding:8px 10px;background:#fff;border-radius:6px;word-break:break-all}
+.profile-detail-label{color:#667eea;font-weight:600;margin-bottom:3px;font-size:.78rem}
+.profile-actions{display:flex;gap:8px;margin-top:10px}
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;padding:15px}
+.modal.active{display:flex}
+.modal-content{background:#fff;border-radius:14px;padding:20px;max-width:620px;width:100%;max-height:92vh;overflow-y:auto}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.modal-title{font-size:1.15rem;color:#333;font-weight:600}
+.modal-close{background:none;border:none;font-size:1.5rem;cursor:pointer;color:#999;padding:4px 8px;line-height:1}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.form-full{grid-column:1/-1}
+.password-prompt{text-align:center;padding:20px}
+.password-prompt p{color:#666;margin-bottom:12px}
+.password-prompt input{padding:10px 14px;font-size:1rem;text-align:center;letter-spacing:4px;width:200px;margin:8px 0;border:2px solid #ddd;border-radius:8px}
+.no-results{text-align:center;padding:40px;color:#999}
+.no-results .icon{font-size:3rem;margin-bottom:10px}
+.detail-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:15px}
+.detail-item{padding:10px;background:#f8f9fa;border-radius:8px}
+.detail-item label{display:block;font-size:.73rem;color:#999;margin-bottom:3px}
+.detail-item span{font-size:.88rem;color:#333;font-weight:500}
+.detail-section{margin-bottom:14px}
+.detail-section h4{color:#667eea;margin-bottom:6px;font-size:.88rem;font-weight:600}
+.detail-section p{color:#333;line-height:1.6;white-space:pre-wrap;word-break:break-all;font-size:.88rem}
+.toast{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.78);color:#fff;padding:12px 28px;border-radius:10px;font-size:.92rem;z-index:2000;pointer-events:none;white-space:nowrap}
+.toast.show{display:block}
+.loading{text-align:center;padding:30px;color:#999}
+.spinner{display:inline-block;width:28px;height:28px;border:3px solid #f3f3f3;border-top:3px solid #667eea;border-radius:50%;animation:spin .8s linear infinite;margin-bottom:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.75rem;margin-left:6px}
+.badge-new{background:#e8f5e9;color:#2e7d32}
+.section-divider{border:none;border-top:1px solid #f0f0f0;margin:15px 0}
+.required-mark{color:#ff4757;margin-left:2px}
+.config-banner{background:linear-gradient(135deg,#ff6b6b,#ee5a24);color:#fff;border-radius:10px;padding:14px 18px;margin-bottom:15px;font-size:.88rem;line-height:1.6}
+.config-banner strong{display:block;font-size:1rem;margin-bottom:6px}
+.config-banner code{background:rgba(255,255,255,.25);padding:2px 6px;border-radius:4px;font-family:monospace;font-size:.83rem}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>💝 公益北京地区征婚交友平台</h1>
+    <p>真诚交友 · 严肃婚恋 · 完全免费</p>
+    <div class="stats-bar">
+      <div class="stat-item">📊 总计 <strong id="totalCount">0</strong> 人</div>
+      <div class="stat-item">👨 男士 <strong id="maleCount">0</strong> 人</div>
+      <div class="stat-item">👩 女士 <strong id="femaleCount">0</strong> 人</div>
+    </div>
+  </div>
+
+  <div id="configBanner" class="config-banner" style="display:none">
+    <strong>⚙️ 需要配置 Supabase</strong>
+    请打开本文件，在顶部 JS 配置区填入你的 <code>SUPABASE_URL</code> 和 <code>SUPABASE_ANON_KEY</code>，然后在 Supabase 后台执行建表 SQL。
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('list',this)">📋 浏览资料</button>
+    <button class="tab-btn" onclick="requirePassword('filter',this)">🔍 筛选查询</button>
+    <button class="tab-btn" onclick="showTab('add',this)">➕ 信息录入</button>
+  </div>
+
+  <!-- 浏览资料 -->
+  <div id="listTab" class="tab-content">
+    <div class="card">
+      <div class="card-title">
+        <span>全部资料</span>
+        <span id="listSyncStatus" style="font-size:.78rem;color:#999">⏳ 加载中...</span>
+      </div>
+      <div id="profilesList" class="profiles-grid">
+        <div class="loading"><div class="spinner"></div><div>正在加载数据...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 筛选查询（需口令） -->
+  <div id="filterTab" class="tab-content" style="display:none">
+    <div class="card">
+      <div class="card-title">筛选条件</div>
+      <div class="filter-grid">
+        <div class="form-group"><label>性别</label>
+          <select id="fGender"><option value="">全部</option><option>男</option><option>女</option></select>
+        </div>
+        <div class="form-group"><label>学历</label>
+          <select id="fEducation"><option value="">全部</option><option>博士</option><option>硕士及以上</option><option>大学本科</option><option>大学专科</option></select>
+        </div>
+        <div class="form-group"><label>婚姻状况</label>
+          <select id="fMarriage"><option value="">全部</option><option>单身</option><option>离异</option><option>短婚未育</option></select>
+        </div>
+        <div class="form-group"><label>年龄范围</label>
+          <select id="fAge"><option value="">全部</option><option value="20-30">20-30岁</option><option value="30-35">30-35岁</option><option value="35-40">35-40岁</option><option value="40-50">40-50岁</option><option value="50-99">50岁以上</option></select>
+        </div>
+        <div class="form-group"><label>身高范围</label>
+          <select id="fHeight"><option value="">全部</option><option value="0-160">160cm以下</option><option value="160-165">160-165cm</option><option value="165-170">165-170cm</option><option value="170-175">170-175cm</option><option value="175-180">175-180cm</option><option value="180-220">180cm以上</option></select>
+        </div>
+        <div class="form-group"><label>税后年收入</label>
+          <select id="fIncome"><option value="">全部</option><option>5-10万</option><option>10-20万</option><option>20万-50万</option><option>50万以上</option></select>
+        </div>
+        <div class="form-group"><label>京房情况</label>
+          <select id="fHouse"><option value="">全部</option><option>有房无贷</option><option>有房有贷</option><option>有房有车</option><option>未购房</option><option>与父母同住</option></select>
+        </div>
+        <div class="form-group"><label>工作地（含关键字）</label>
+          <input type="text" id="fWorkLocation" placeholder="如：海淀、朝阳">
+        </div>
+        <div class="form-group"><label>户籍地（含关键字）</label>
+          <input type="text" id="fHukou" placeholder="如：北京、河北">
+        </div>
+      </div>
+      <div style="margin-top:15px;display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="applyFilter()">🔍 开始筛选</button>
+        <button class="btn btn-secondary" onclick="resetFilter()">重置</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">筛选结果 <span style="font-size:.9rem;font-weight:normal;color:#999">共 <span id="filterCount">0</span> 人</span></div>
+      <div id="filterResults" class="profiles-grid">
+        <div class="no-results"><div class="icon">🔍</div><div>请设置筛选条件后点击查询</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 信息录入 -->
+  <div id="addTab" class="tab-content" style="display:none">
+    <div class="card">
+      <div class="card-title">信息录入</div>
+      <form id="addForm" onsubmit="submitProfile(event)">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>性别<span class="required-mark">*</span></label>
+            <select id="aGender" required><option value="">请选择</option><option>男</option><option>女</option></select>
+          </div>
+          <div class="form-group">
+            <label>出生年月<span class="required-mark">*</span></label>
+            <input type="month" id="aBirthMonth" required min="1960-01" max="2010-12" placeholder="如：1990-06">
+          </div>
+          <div class="form-group">
+            <label>身高(cm)<span class="required-mark">*</span></label>
+            <input type="number" id="aHeight" required min="140" max="220" placeholder="如：175">
+          </div>
+          <div class="form-group">
+            <label>体重(kg)</label>
+            <input type="number" id="aWeight" min="30" max="200" placeholder="如：65">
+          </div>
+          <div class="form-group">
+            <label>工作地<span class="required-mark">*</span></label>
+            <input type="text" id="aWorkLocation" required placeholder="如：北京市海淀区">
+          </div>
+          <div class="form-group">
+            <label>户籍地</label>
+            <input type="text" id="aHukou" placeholder="如：北京市朝阳区">
+          </div>
+          <div class="form-group">
+            <label>学历<span class="required-mark">*</span></label>
+            <select id="aEducation" required>
+              <option value="">请选择</option>
+              <option>博士</option><option>硕士及以上</option><option>大学本科</option><option>大学专科</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>婚姻状况<span class="required-mark">*</span></label>
+            <select id="aMarriage" required>
+              <option value="">请选择</option>
+              <option>单身</option><option>离异</option><option>短婚未育</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>职业</label>
+            <select id="aJob">
+              <option value="">请选择</option>
+              <option>政府/机关干部/公务员/事业单位</option>
+              <option>企业管理者（包括基层及中高层管理者）</option>
+              <option>专业人员（如医生、律师、文体、记者、老师等）</option>
+              <option>普通职员/白领工作者（在办公室/写字楼工作）</option>
+              <option>暂无固定职业</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>税后年收入</label>
+            <select id="aIncome">
+              <option value="">请选择</option>
+              <option>5-10万</option><option>10-20万</option><option>20万-50万</option><option>50万以上</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>京房情况</label>
+            <select id="aHouse">
+              <option value="">请选择</option>
+              <option>有房无贷</option><option>有房有贷</option><option>有房有车</option><option>未购房</option><option>与父母同住</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>健康状况</label>
+            <select id="aHealth">
+              <option value="">请选择</option>
+              <option>很健康</option><option>健康</option><option>良好</option><option>优</option><option>身心健康</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>家中几个孩子</label>
+            <select id="aChildren">
+              <option value="">请选择</option>
+              <option>1个</option><option>2个</option><option>2个以上</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>家长目前工作性质</label>
+            <select id="aParentJob">
+              <option value="">请选择</option>
+              <option>退休</option>
+              <option>政府/机关干部/公务员/事业单位</option>
+              <option>企业管理者（包括基层及中高层管理者）</option>
+              <option>自由职业者</option>
+              <option>暂无固定职业</option>
+              <option>其他</option>
+            </select>
+          </div>
+          <div class="form-group form-full">
+            <label>性格爱好</label>
+            <textarea id="aHobby" rows="3" placeholder="请描述性格特点和兴趣爱好..."></textarea>
+          </div>
+          <div class="form-group form-full">
+            <label>补充说明</label>
+            <textarea id="aExtra" rows="3" placeholder="其他需要补充的信息..."></textarea>
+          </div>
+          <div class="form-group form-full">
+            <label>对另一半的要求</label>
+            <textarea id="aExpectation" rows="3" placeholder="请描述对另一半的期待和要求..."></textarea>
+          </div>
+        </div>
+        <div style="margin-top:18px;display:flex;gap:10px">
+          <button type="submit" class="btn btn-primary">✅ 提交资料</button>
+          <button type="button" class="btn btn-secondary" onclick="document.getElementById('addForm').reset()">清空</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- 口令弹窗 -->
+<div id="pwModal" class="modal">
+  <div class="modal-content" style="max-width:340px">
+    <div class="modal-header">
+      <h3 class="modal-title">🔒 身份验证</h3>
+      <button class="modal-close" onclick="closeModal('pwModal')">×</button>
+    </div>
+    <div class="password-prompt">
+      <p>请输入查询口令以访问筛选功能</p>
+      <input type="password" id="pwInput" placeholder="请输入口令" onkeydown="if(event.key==='Enter')checkPassword()">
+      <br><br>
+      <button class="btn btn-primary" style="width:100%" onclick="checkPassword()">确认进入</button>
+    </div>
+  </div>
+</div>
+
+<!-- 资料详情弹窗 -->
+<div id="detailModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title" id="detailTitle">资料详情</h3>
+      <button class="modal-close" onclick="closeModal('detailModal')">×</button>
+    </div>
+    <div id="detailContent"></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// 🔧 配置区 - 请填入你的 Supabase 信息
+// ============================================================
+const SUPABASE_URL = 'https://bupcssfohoxavphkuscf.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1cGNzc2ZvaG94YXZwaGt1c2NmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ1NTU3MjUsImV4cCI6MjA2MDEzMTcyNX0.sb_publishable_yOIoYj_eaWEiJlK7N65qfw_bust0Sjg';
+const QUERY_PASSWORD = '.2026.';                  // 筛选查询口令
+// ============================================================
+
+// 初始化 Supabase
+let supabase = null;
+let profiles = [];
+let filterUnlocked = false;
+let pendingFilterTab = false;
+let realtimeChannel = null;
+
+function initSupabase() {
+  if (SUPABASE_URL === 'YOUR_SUPABASE_URL' || SUPABASE_ANON_KEY === 'YOUR_SUPABASE_ANON_KEY') {
+    document.getElementById('configBanner').style.display = 'block';
+    showToast('⚠️ 请先配置 Supabase 信息！');
+    return false;
+  }
+  try {
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    return true;
+  } catch(e) {
+    showToast('Supabase 初始化失败：' + e.message);
+    return false;
+  }
+}
+
+// 计算年龄
+function calcAge(birthMonth) {
+  if (!birthMonth) return null;
+  const [y, m] = birthMonth.split('-').map(Number);
+  const now = new Date();
+  let age = now.getFullYear() - y;
+  if (now.getMonth() + 1 < m) age--;
+  return age;
+}
+
+// 格式化地址（去掉多余的省/市分隔符）
+function fmtAddr(addr) {
+  if (!addr) return '';
+  return addr.replace(/；\s*\n/g, '').replace(/；\n/g, '').replace(/\n/g, '').replace(/；/g, ' ').trim();
+}
+
+// 加载数据
+async function loadProfiles() {
+  if (!supabase) return;
+  document.getElementById('listSyncStatus').textContent = '⏳ 加载中...';
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .order('code', { ascending: false });
+    if (error) throw error;
+    profiles = data || [];
+    renderProfiles();
+    updateStats();
+    document.getElementById('listSyncStatus').textContent = '✅ 已同步';
+  } catch(e) {
+    document.getElementById('listSyncStatus').textContent = '❌ 加载失败';
+    showToast('加载失败：' + e.message);
+    document.getElementById('profilesList').innerHTML = '<div class="no-results"><div class="icon">❌</div><div>数据加载失败，请检查 Supabase 配置</div></div>';
+  }
+}
+
+// 实时订阅
+function subscribeRealtime() {
+  if (!supabase) return;
+  realtimeChannel = supabase
+    .channel('profiles-changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => {
+      loadProfiles();
+    })
+    .subscribe();
+}
+
+// 更新统计
+function updateStats() {
+  document.getElementById('totalCount').textContent = profiles.length;
+  document.getElementById('maleCount').textContent = profiles.filter(p => p.gender === '男').length;
+  document.getElementById('femaleCount').textContent = profiles.filter(p => p.gender === '女').length;
+}
+
+// 渲染卡片列表
+function renderProfiles(data) {
+  const list = data || profiles;
+  const el = document.getElementById('profilesList');
+  if (!list.length) {
+    el.innerHTML = '<div class="no-results"><div class="icon">📭</div><div>暂无资料</div></div>';
+    return;
+  }
+  el.innerHTML = list.map(p => createCard(p)).join('');
+}
+
+// 创建卡片 HTML
+function createCard(p) {
+  const age = calcAge(p.birth_month);
+  const num = String(p.id).padStart(3, '0');
+  const isFemale = p.gender === '女';
+  return `<div class="profile-card ${isFemale ? 'female' : ''}">
+    <div class="profile-header">
+      <div>
+        <div class="profile-num">${num}</div>
+        <div class="profile-code">${p.code || ''}</div>
+      </div>
+      <span class="profile-gender ${isFemale ? 'gender-female' : 'gender-male'}">${p.gender}</span>
+    </div>
+    <div class="profile-info">
+      <div class="info-item"><span class="info-label">年龄：</span><span class="info-value">${age ? age + '岁' : '-'}</span></div>
+      <div class="info-item"><span class="info-label">身高：</span><span class="info-value">${p.height ? p.height + 'cm' : '-'}</span></div>
+      <div class="info-item"><span class="info-label">学历：</span><span class="info-value">${p.education || '-'}</span></div>
+      <div class="info-item"><span class="info-label">婚姻：</span><span class="info-value">${p.marriage || '-'}</span></div>
+      <div class="info-item"><span class="info-label">工作地：</span><span class="info-value">${fmtAddr(p.work_location) || '-'}</span></div>
+      <div class="info-item"><span class="info-label">收入：</span><span class="info-value">${p.income || '-'}</span></div>
+    </div>
+    ${p.hobby ? `<div class="profile-detail"><div class="profile-detail-label">性格爱好</div>${p.hobby}</div>` : ''}
+    ${p.expectation ? `<div class="profile-detail"><div class="profile-detail-label">期待对象</div>${p.expectation}</div>` : ''}
+    <div class="profile-actions">
+      <button class="btn btn-primary btn-small" onclick="showDetail(${p.id})">详情</button>
+    </div>
+  </div>`;
+}
+
+// 详情弹窗
+function showDetail(id) {
+  const p = profiles.find(i => i.id === id);
+  if (!p) return;
+  const age = calcAge(p.birth_month);
+  document.getElementById('detailTitle').textContent = '编号 ' + String(p.id).padStart(3, '0') + ' · ' + p.gender;
+  document.getElementById('detailContent').innerHTML = `
+    <div class="detail-grid">
+      <div class="detail-item"><label>编号</label><span>${p.code || '-'}</span></div>
+      <div class="detail-item"><label>性别</label><span>${p.gender}</span></div>
+      <div class="detail-item"><label>年龄</label><span>${age ? age + '岁 (' + p.birth_month + ')' : '-'}</span></div>
+      <div class="detail-item"><label>身高/体重</label><span>${p.height || '-'}cm / ${p.weight || '-'}kg</span></div>
+      <div class="detail-item"><label>学历</label><span>${p.education || '-'}</span></div>
+      <div class="detail-item"><label>婚姻</label><span>${p.marriage || '-'}</span></div>
+      <div class="detail-item"><label>工作地</label><span>${fmtAddr(p.work_location) || '-'}</span></div>
+      <div class="detail-item"><label>户籍地</label><span>${fmtAddr(p.hukou) || '-'}</span></div>
+      <div class="detail-item"><label>职业</label><span>${p.job || '-'}</span></div>
+      <div class="detail-item"><label>税后年收入</label><span>${p.income || '-'}</span></div>
+      <div class="detail-item"><label>京房情况</label><span>${p.house || '-'}</span></div>
+      <div class="detail-item"><label>健康状况</label><span>${p.health || '-'}</span></div>
+      <div class="detail-item"><label>家中孩子</label><span>${p.children || '-'}</span></div>
+      <div class="detail-item"><label>家长工作</label><span>${p.parent_job || '-'}</span></div>
+    </div>
+    ${p.hobby ? `<div class="detail-section"><h4>性格爱好</h4><p>${p.hobby}</p></div>` : ''}
+    ${p.extra ? `<div class="detail-section"><h4>补充说明</h4><p>${p.extra}</p></div>` : ''}
+    ${p.expectation ? `<div class="detail-section"><h4>对另一半的要求</h4><p>${p.expectation}</p></div>` : ''}
+    <div style="font-size:.75rem;color:#bbb;text-align:right;margin-top:10px">填写时间：${p.fill_time || '-'}</div>
+  `;
+  document.getElementById('detailModal').classList.add('active');
+}
+
+// Tab 切换
+function showTab(tab, btn) {
+  document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById(tab + 'Tab').style.display = 'block';
+  if (btn) btn.classList.add('active');
+}
+
+// 需要口令才能访问筛选
+function requirePassword(tab, btn) {
+  if (filterUnlocked) {
+    showTab(tab, btn);
+    return;
+  }
+  pendingFilterTab = { tab, btn };
+  document.getElementById('pwInput').value = '';
+  document.getElementById('pwModal').classList.add('active');
+  setTimeout(() => document.getElementById('pwInput').focus(), 200);
+}
+
+function checkPassword() {
+  const pw = document.getElementById('pwInput').value;
+  if (pw === QUERY_PASSWORD) {
+    filterUnlocked = true;
+    closeModal('pwModal');
+    if (pendingFilterTab) {
+      showTab(pendingFilterTab.tab, pendingFilterTab.btn);
+      pendingFilterTab = null;
+    }
+    showToast('✅ 验证成功，欢迎使用筛选功能！');
+  } else {
+    showToast('❌ 口令错误，请重试');
+    document.getElementById('pwInput').value = '';
+    document.getElementById('pwInput').focus();
+  }
+}
+
+// 筛选
+function applyFilter() {
+  const gender = document.getElementById('fGender').value;
+  const education = document.getElementById('fEducation').value;
+  const marriage = document.getElementById('fMarriage').value;
+  const ageRange = document.getElementById('fAge').value;
+  const heightRange = document.getElementById('fHeight').value;
+  const income = document.getElementById('fIncome').value;
+  const house = document.getElementById('fHouse').value;
+  const workKw = document.getElementById('fWorkLocation').value.trim();
+  const hukouKw = document.getElementById('fHukou').value.trim();
+
+  const results = profiles.filter(p => {
+    const age = calcAge(p.birth_month);
+    if (gender && p.gender !== gender) return false;
+    if (education && p.education !== education) return false;
+    if (marriage && p.marriage !== marriage) return false;
+    if (ageRange && age !== null) {
+      const [mn, mx] = ageRange.split('-').map(Number);
+      if (age < mn || age > mx) return false;
+    }
+    if (heightRange && p.height) {
+      const [hn, hx] = heightRange.split('-').map(Number);
+      if (p.height < hn || p.height >= hx) return false;
+    }
+    if (income && p.income !== income) return false;
+    if (house && p.house !== house) return false;
+    if (workKw && !(p.work_location || '').includes(workKw)) return false;
+    if (hukouKw && !(p.hukou || '').includes(hukouKw)) return false;
+    return true;
+  });
+
+  document.getElementById('filterCount').textContent = results.length;
+  const el = document.getElementById('filterResults');
+  if (!results.length) {
+    el.innerHTML = '<div class="no-results"><div class="icon">🔍</div><div>没有符合条件的资料</div></div>';
+  } else {
+    el.innerHTML = results.map(p => createCard(p)).join('');
+  }
+}
+
+function resetFilter() {
+  ['fGender','fEducation','fMarriage','fAge','fHeight','fIncome','fHouse'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('fWorkLocation').value = '';
+  document.getElementById('fHukou').value = '';
+  document.getElementById('filterCount').textContent = '0';
+  document.getElementById('filterResults').innerHTML = '<div class="no-results"><div class="icon">🔍</div><div>请设置筛选条件后点击查询</div></div>';
+}
+
+// 提交新资料
+async function submitProfile(e) {
+  e.preventDefault();
+  if (!supabase) { showToast('⚠️ 请先配置 Supabase！'); return; }
+
+  const now = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  const code = now.getFullYear() + pad(now.getMonth()+1) + pad(now.getDate()) + pad(now.getHours()) + pad(now.getMinutes());
+  const fillTime = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+
+  const newProfile = {
+    code,
+    gender: document.getElementById('aGender').value,
+    birth_month: document.getElementById('aBirthMonth').value,
+    height: parseInt(document.getElementById('aHeight').value) || null,
+    weight: parseInt(document.getElementById('aWeight').value) || null,
+    work_location: document.getElementById('aWorkLocation').value,
+    hukou: document.getElementById('aHukou').value,
+    education: document.getElementById('aEducation').value,
+    marriage: document.getElementById('aMarriage').value,
+    job: document.getElementById('aJob').value,
+    income: document.getElementById('aIncome').value,
+    house: document.getElementById('aHouse').value,
+    health: document.getElementById('aHealth').value,
+    children: document.getElementById('aChildren').value,
+    parent_job: document.getElementById('aParentJob').value,
+    hobby: document.getElementById('aHobby').value,
+    extra: document.getElementById('aExtra').value,
+    expectation: document.getElementById('aExpectation').value,
+    fill_time: fillTime,
+  };
+
+  try {
+    const { error } = await supabase.from('profiles').insert([newProfile]);
+    if (error) throw error;
+    document.getElementById('addForm').reset();
+    showToast('✅ 提交成功，数据已实时同步！');
+    showTab('list', document.querySelector('.tab-btn'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('.tab-btn').classList.add('active');
+  } catch(e) {
+    showToast('❌ 提交失败：' + e.message);
+  }
+}
+
+// 关闭弹窗
+function closeModal(id) {
+  document.getElementById(id).classList.remove('active');
+}
+
+// Toast 提示
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// 点击背景关闭弹窗
+document.querySelectorAll('.modal').forEach(m => {
+  m.addEventListener('click', function(e) { if(e.target === this) this.classList.remove('active'); });
+});
+
+// 启动
+(function init() {
+  if (initSupabase()) {
+    loadProfiles();
+    subscribeRealtime();
+  }
+})();
+</script>
+</body>
+</html>
